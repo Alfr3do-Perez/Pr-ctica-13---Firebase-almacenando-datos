@@ -2,6 +2,7 @@ package com.example.digimind.ui.dashboard
 
 import android.app.TimePickerDialog
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,12 +13,19 @@ import androidx.lifecycle.ViewModelProviders
 import com.example.digimind.R
 import com.example.digimind.Task
 import com.example.digimind.ui.home.HomeFragment
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
+import kotlinx.android.synthetic.main.fragment_dashboard.*
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
 class DashboardFragment : Fragment() {
 
+
+    private lateinit var storage:FirebaseFirestore;
+    private lateinit var usuario:FirebaseAuth;
     private lateinit var dashboardViewModel: DashboardViewModel
 
     override fun onCreateView(
@@ -28,6 +36,9 @@ class DashboardFragment : Fragment() {
         dashboardViewModel =
                 ViewModelProviders.of(this).get(DashboardViewModel::class.java)
         val root = inflater.inflate(R.layout.fragment_dashboard, container, false)
+
+        storage = FirebaseFirestore.getInstance();
+        usuario = FirebaseAuth.getInstance();
 
         val btn_time: Button = root.findViewById(R.id.btn_time)
 
@@ -60,9 +71,30 @@ class DashboardFragment : Fragment() {
             var titulo = et_titulo.text.toString()
             var time = btn_time.text.toString()
 
-            var days = ArrayList<String>()
+            //var days = ArrayList<String>()
 
-            if(checkMonday.isChecked)
+            val actividad = hashMapOf(
+                "actividad" to titulo,
+                "email" to usuario.currentUser.email.toString(),
+                "lu" to checkMonday.isChecked,
+                "ma" to checkTuesday.isChecked,
+                "mi" to checkWednesday.isChecked,
+                "ju" to checkThursday.isChecked,
+                "vi" to checkFriday.isChecked,
+                "sa" to checkSaturday.isChecked,
+                "do" to checkSunday.isChecked,
+                "tiempo" to time
+            );
+            Log.e("task", actividad.toString());
+            Log.e("task", usuario.currentUser.email)
+            storage.collection("actividades")
+                .add(actividad)
+                .addOnSuccessListener {
+                    Toast.makeText(root.context, "new task added", Toast.LENGTH_SHORT).show()
+                }.addOnFailureListener{
+                    Toast.makeText(root.context, "Error!, try again", Toast.LENGTH_SHORT).show()
+                }
+            /*if(checkMonday.isChecked)
                 days.add("Monday")
             if(checkTuesday.isChecked)
                 days.add("Tuesday")
@@ -75,13 +107,12 @@ class DashboardFragment : Fragment() {
             if(checkSaturday.isChecked)
                 days.add("Saturday")
             if(checkSunday.isChecked)
-                days.add("Sunday")
+                days.add("Sunday")*/
 
-            var task = Task(titulo, days, time)
+            //var task = Task(titulo, days, time)
 
-            HomeFragment.tasks.add(task)
+            //HomeFragment.tasks.add(task)
 
-            Toast.makeText(root.context, "new task added", Toast.LENGTH_SHORT).show()
         }
 
 
